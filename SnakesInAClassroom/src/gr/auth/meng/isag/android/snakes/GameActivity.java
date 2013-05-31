@@ -1,46 +1,37 @@
 package gr.auth.meng.isag.android.snakes;
 
-import java.util.LinkedList;
-import java.util.List;
-
+import gr.auth.meng.isag.android.snakes.api.SnakeBoard;
+import gr.auth.meng.isag.android.snakes.api.SnakePainter;
+import gr.auth.meng.isag.android.snakes.impl.BoardBuilder;
+import gr.auth.meng.isag.android.snakes.impl.SnakePainterImpl;
 import android.app.Activity;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 
-public class GameActivity extends Activity implements Callback {
-	public static final int GRID_SIZE = 30;
-
-	public static final byte ID_EMPTY = 0;
-	public static final byte ID_WALL = 1;
-	public static final byte ID_FRUIT = 2;
-	public static final byte ID_SNAKE = 3;
-
-	private static int[][] colors = { { 0, 0, 0 }, { 128, 128, 128 },
-			{ 255, 128, 0 }, { 0, 255, 64 } };
-
-	// //////////////////////////////////
-
-	private int direction = 0;
-
-	private byte[][] board = new byte[GRID_SIZE][GRID_SIZE];
-
-	private List<IntPair> snakeCoordinates = new LinkedList<IntPair>();
-
-	private int growth = 0;
-
+public class GameActivity extends Activity implements Callback, Runnable {
 	private SurfaceView surfaceView;
 
 	private SurfaceHolder holder;
 
+	private SnakeBoard board;
+
+	private SnakePainter painter;
+
+	private boolean surface;
+
+	private boolean running;
+
+	private Thread thread;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		initialize();
+
+		board = new BoardBuilder().outlineWalls().addFruit().build();
+		painter = new SnakePainterImpl();
 
 		surfaceView = new SurfaceView(this);
 		holder = surfaceView.getHolder();
@@ -48,68 +39,39 @@ public class GameActivity extends Activity implements Callback {
 		setContentView(surfaceView);
 	}
 
-	private void initialize() {
-		fillBoard(ID_EMPTY, 1, 1, GRID_SIZE - 2, GRID_SIZE - 2);
-		fillBoard(ID_WALL, 0, 0, 0, GRID_SIZE - 1);
-		fillBoard(ID_WALL, 0, 0, GRID_SIZE - 1, 0);
-		fillBoard(ID_WALL, GRID_SIZE - 1, 0, GRID_SIZE - 1, GRID_SIZE - 1);
-		fillBoard(ID_WALL, 0, GRID_SIZE - 1, GRID_SIZE - 1, GRID_SIZE - 1);
-		addFruit();
-		snakeCoordinates.clear();
-		for (int i = -1; i <= 1; i++) {
-			snakeCoordinates.add(new IntPair(GRID_SIZE / 2 + i, GRID_SIZE / 2));
-		}
-		fillBoard(ID_SNAKE, GRID_SIZE / 2 - 1, GRID_SIZE / 2 ,
-				GRID_SIZE / 2+1, GRID_SIZE / 2);
+	@Override
+	protected void onPause() {
+		super.onPause();
+		this.running = false;
+		stopThread();
 	}
 
-	private void fillBoard(byte id, int x1, int y1, int x2, int y2) {
-		for (int y = y1; y <= y2; y++) {
-			for (int x = x1; x <= x2; x++) {
-				board[y][x] = id;
-			}
-		}
+	@Override
+	protected void onResume() {
+		super.onResume();
+		this.running = true;
+		possiblyStartThread();
 	}
 
-	private void addFruit() {
-		int fx, fy;
-		do {
-			fx = (int) (Math.random() * GRID_SIZE);
-			fy = (int) (Math.random() * GRID_SIZE);
-		} while (board[fy][fx] != ID_EMPTY);
-		board[fy][fx] = ID_FRUIT;
-	}
-
-	private void paintBoard(Canvas c) {
-		int w = c.getWidth();
-		int h = c.getHeight();
-
-		float size = (w > h ? h : w) / (float) GRID_SIZE;
-		w -= GRID_SIZE * size;
-		h -= GRID_SIZE * size;
-		w /= 2;
-		h /= 2;
-
-		c.drawRGB(0, 0, 0);
-		Paint p = new Paint();
-		for (int y = 0; y < GRID_SIZE; y++) {
-			for (int x = 0; x < GRID_SIZE; x++) {
-				byte val = board[y][x];
-				if (val == ID_EMPTY)
-					continue;
-				p.setARGB(128, colors[val][0], colors[val][1], colors[val][2]);
-				float px = w + x * size;
-				float py = h + y * size;
-
-				c.drawRect(px, py, px + size - 1, py + size - 1, p);
-			}
+	private void possiblyStartThread() {
+		if (running == false || surface == false)
+			return;
+		if (thread == null) {
+			this.thread = new Thread(this);
+			this.thread.start();
 		}
 	}
-	
-	private void paintBoard(SurfaceHolder holder){
+
+	private void stopThread() {
+		if (this.thread == null)
+			return;
+		this.thread.interrupt();
+	}
+
+	private void paintBoard(SurfaceHolder holder) {
 		Canvas c = holder.lockCanvas();
 		try {
-			paintBoard(c);
+			painter.paintBoard(board, c);
 		} finally {
 			holder.unlockCanvasAndPost(c);
 		}
@@ -121,10 +83,26 @@ public class GameActivity extends Activity implements Callback {
 	}
 
 	public void surfaceCreated(SurfaceHolder holder) {
-		paintBoard(holder);
+		this.surface = true;
+		possiblyStartThread();
 	}
 
 	public void surfaceDestroyed(SurfaceHolder holder) {
-		// TODO Auto-generated method stub
+		this.surface = false;
+		stopThread();
+	}
+
+	public void run() {
+		try {
+			while (true) {
+				if (!board.moveSnake())
+					break;
+				paintBoard(holder);
+				Thread.sleep(300);
+			}
+		} catch (InterruptedException e) {
+		} finally {
+			this.thread = null;
+		}
 	}
 }
