@@ -17,14 +17,19 @@ public interface SnakeBoard extends GameBoard {
 	public static final int DIRECTION_MIN = DIRECTION_UP;
 	public static final int DIRECTION_MAX = DIRECTION_LEFT;
 
-	
 	public int getDirection();
 
 	public void setDirection(int direction);
 
 	public List<IntPair> getSnakePositions();
 
-	public boolean moveSnake();
-
 	SnakeTile getTile(int x, int y);
+	
+	////
+	
+	public void addNextHead(IntPair xy);
+
+	public void removeTail();
+
+	public void addFruit();
 }

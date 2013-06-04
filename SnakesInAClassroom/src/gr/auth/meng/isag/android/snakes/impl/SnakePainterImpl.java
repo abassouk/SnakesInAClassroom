@@ -1,22 +1,24 @@
 package gr.auth.meng.isag.android.snakes.impl;
 
-import android.graphics.Canvas;
-import android.graphics.Paint;
 import gr.auth.meng.isag.android.snakes.api.SnakeBoard;
 import gr.auth.meng.isag.android.snakes.api.SnakeBoard.SnakeTile;
-import gr.auth.meng.isag.android.snakes.api.SnakePainter;
+import gr.auth.meng.isag.android.snakes.api.GameComponent;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.view.SurfaceView;
 
-public class SnakePainterImpl implements SnakePainter {
+public class SnakePainterImpl implements GameComponent<SnakeBoard> {
 	private static int[][] colors = { { 0, 0, 0 }, { 128, 128, 128 },
 			{ 255, 128, 0 }, { 0, 255, 64 } };
+	private SnakeBoard board;
 
-	public void paintBoard(SnakeBoard board, Canvas canvas) {
+	public void doDraw(Canvas canvas) {
 		int w = canvas.getWidth();
 		int h = canvas.getHeight();
 
 		float sizeX = w / (float) board.getWidth();
 		float sizeY = h / (float) board.getHeight();
-		
+
 		float size = sizeX > sizeY ? sizeY : sizeX;
 		w -= board.getWidth() * size;
 		h -= board.getHeight() * size;
@@ -38,5 +40,16 @@ public class SnakePainterImpl implements SnakePainter {
 				canvas.drawRect(px, py, px + size - 1, py + size - 1, p);
 			}
 		}
+	}
+
+	public void setup(SnakeBoard board, SurfaceView surface) {
+		this.board = board;
+	}
+
+	public void teardown() {
+	}
+
+	public boolean onGameTick() {
+		return false;
 	}
 }

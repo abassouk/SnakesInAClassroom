@@ -11,16 +11,11 @@ public class SnakeBoardImpl implements SnakeBoard {
 	private static final int BOARD_WIDTH = 30;
 	private static final int BOARD_HEIGHT = 30;
 
-	private static IntPair[] directions = new IntPair[] { new IntPair(0, -1),
-			new IntPair(1, 0), new IntPair(0, 1), new IntPair(-1, 0) };
-
-	private int direction = 0;
+	private int direction = DIRECTION_UP;
 
 	private SnakeTile[][] board = new SnakeTile[BOARD_HEIGHT][BOARD_WIDTH];
 
-	private List<IntPair> snakeCoordinates = new LinkedList<IntPair>();
-
-	private int growth = 0;
+	private LinkedList<IntPair> snakeCoordinates = new LinkedList<IntPair>();
 
 	public int getWidth() {
 		return BOARD_WIDTH;
@@ -52,43 +47,19 @@ public class SnakeBoardImpl implements SnakeBoard {
 		return snakeCoordinates;
 	}
 
-	public boolean moveSnake() {
-		IntPair head = snakeCoordinates.get(0);
-		IntPair dir = directions[direction];
-		int x = head.getX() + dir.getX();
-		int y = head.getY() + dir.getY();
-		// check bounds, stay within bounds
-		if (x < 0)
-			x = getWidth() - 1;
-		else if (x >= getWidth())
-			x = 0;
-		if (y < 0)
-			y = getHeight() - 1;
-		else if (y >= getHeight())
-			y = 0;
-		SnakeTile tile = getTile(x, y);
-		// check for game over;
-		if (tile == SnakeTile.TILE_SNAKE || tile == SnakeTile.TILE_WALL) {
-			return false;
-		}
-		// add head;
-		snakeCoordinates.add(0, new IntPair(x, y));
-		setTile(x, y, SnakeTile.TILE_SNAKE);
-		// fruit logic;
-		if (tile == SnakeTile.TILE_FRUIT) {
-			growth += 3;
-			addFruit();
-		}
-		if (growth > 0) {
-			growth--;
-		} else {
-			IntPair pair = snakeCoordinates.remove(snakeCoordinates.size() - 1);
-			setTile(pair.getX(), pair.getY(), SnakeTile.TILE_EMPTY);
-		}
-		return true;
+	// //
+
+	public void addNextHead(IntPair xy) {
+		snakeCoordinates.add(0, xy);
+		setTile(xy.getX(), xy.getY(), SnakeTile.TILE_SNAKE);
 	}
 
-	private void addFruit() {
+	public void removeTail() {
+		IntPair coordinates = snakeCoordinates.removeLast();
+		setTile(coordinates.getX(), coordinates.getY(), SnakeTile.TILE_EMPTY);
+	}
+
+	public void addFruit() {
 		int fx, fy;
 		do {
 			fx = (int) (Math.random() * getWidth());

@@ -1,8 +1,11 @@
 package gr.auth.meng.isag.android.snakes;
 
+import gr.auth.meng.isag.android.snakes.api.MultiComponent;
 import gr.auth.meng.isag.android.snakes.api.SnakeBoard;
-import gr.auth.meng.isag.android.snakes.api.SnakePainter;
+import gr.auth.meng.isag.android.snakes.api.GameComponent;
 import gr.auth.meng.isag.android.snakes.impl.BoardBuilder;
+import gr.auth.meng.isag.android.snakes.impl.HalfTouchController;
+import gr.auth.meng.isag.android.snakes.impl.SnakeBehaviour;
 import gr.auth.meng.isag.android.snakes.impl.SnakePainterImpl;
 import android.app.Activity;
 import android.graphics.Canvas;
@@ -18,7 +21,7 @@ public class GameActivity extends Activity implements Callback, Runnable {
 
 	private SnakeBoard board;
 
-	private SnakePainter painter;
+	private GameComponent<SnakeBoard> components;
 
 	private boolean surface;
 
@@ -31,7 +34,8 @@ public class GameActivity extends Activity implements Callback, Runnable {
 		super.onCreate(savedInstanceState);
 
 		board = new BoardBuilder().outlineWalls().addFruit().build();
-		painter = new SnakePainterImpl();
+		components = new MultiComponent<SnakeBoard>(new HalfTouchController(),
+				new SnakeBehaviour(), new SnakePainterImpl());
 
 		surfaceView = new SurfaceView(this);
 		holder = surfaceView.getHolder();
@@ -44,12 +48,14 @@ public class GameActivity extends Activity implements Callback, Runnable {
 		super.onPause();
 		this.running = false;
 		stopThread();
+		components.teardown();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		this.running = true;
+		components.setup(board, surfaceView);
 		possiblyStartThread();
 	}
 
@@ -57,7 +63,7 @@ public class GameActivity extends Activity implements Callback, Runnable {
 		if (running == false || surface == false)
 			return;
 		if (thread == null) {
-			this.thread = new Thread(this);
+			this.thread = new Thread(this, "Game Thread");
 			this.thread.start();
 		}
 	}
@@ -71,7 +77,7 @@ public class GameActivity extends Activity implements Callback, Runnable {
 	private void paintBoard(SurfaceHolder holder) {
 		Canvas c = holder.lockCanvas();
 		try {
-			painter.paintBoard(board, c);
+			components.doDraw(c);
 		} finally {
 			holder.unlockCanvasAndPost(c);
 		}
@@ -95,7 +101,7 @@ public class GameActivity extends Activity implements Callback, Runnable {
 	public void run() {
 		try {
 			while (true) {
-				if (!board.moveSnake())
+				if (components.onGameTick())
 					break;
 				paintBoard(holder);
 				Thread.sleep(300);
