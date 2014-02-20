@@ -48,6 +48,7 @@ public class SnakeBoardImpl implements SnakeBoard {
 	}
 
 	// //
+	// I have a feeling these should go to SnakeBehaniour...
 
 	public void addNextHead(IntPair xy) {
 		snakeCoordinates.add(0, xy);
@@ -59,6 +60,10 @@ public class SnakeBoardImpl implements SnakeBoard {
 		setTile(coordinates.getX(), coordinates.getY(), SnakeTile.TILE_EMPTY);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see gr.auth.meng.isag.android.snakes.api.SnakeBoard#addFruit()
+	 */
 	public void addFruit() {
 		int fx, fy;
 		do {

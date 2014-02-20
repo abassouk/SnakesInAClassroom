@@ -7,6 +7,14 @@ import java.util.List;
 import android.graphics.Canvas;
 import android.view.SurfaceView;
 
+/**
+ * A component that is constructed by aggregation of other components. Will emit
+ * the same {@link GameComponent} methods to all subcomponents.
+ * 
+ * @author abas
+ * 
+ * @param <Board>
+ */
 public class MultiComponent<Board extends GameBoard> implements
 		GameComponent<Board> {
 	private List<GameComponent<Board>> components = new ArrayList<GameComponent<Board>>();

@@ -7,7 +7,15 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.view.SurfaceView;
 
+/**
+ * Draw the current state of the game board.
+ * 
+ * @author abas
+ * 
+ */
 public class SnakePainterImpl implements GameComponent<SnakeBoard> {
+	// the colors of the tiles - this should be moved into the tiles
+	// themselves....
 	private static int[][] colors = { { 0, 0, 0 }, { 128, 128, 128 },
 			{ 255, 128, 0 }, { 0, 255, 64 } };
 	private SnakeBoard board;
@@ -25,6 +33,7 @@ public class SnakePainterImpl implements GameComponent<SnakeBoard> {
 		w /= 2;
 		h /= 2;
 
+		// fill a black backround. 
 		canvas.drawRGB(0, 0, 0);
 		Paint p = new Paint();
 		for (int y = 0; y < board.getHeight(); y++) {

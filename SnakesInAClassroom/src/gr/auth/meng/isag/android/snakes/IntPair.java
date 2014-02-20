@@ -1,5 +1,10 @@
 package gr.auth.meng.isag.android.snakes;
 
+/**
+ * A pair of ints. Misnamed, should be IntCoordinates....
+ * 
+ * @author abas
+ */
 public class IntPair {
 	private int x, y;
 
