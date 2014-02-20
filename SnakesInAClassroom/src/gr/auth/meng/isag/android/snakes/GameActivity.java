@@ -1,12 +1,7 @@
 package gr.auth.meng.isag.android.snakes;
 
-import gr.auth.meng.isag.android.snakes.api.MultiComponent;
-import gr.auth.meng.isag.android.snakes.api.SnakeBoard;
+import gr.auth.meng.isag.android.snakes.api.GameBoard;
 import gr.auth.meng.isag.android.snakes.api.GameComponent;
-import gr.auth.meng.isag.android.snakes.impl.BoardBuilder;
-import gr.auth.meng.isag.android.snakes.impl.HalfTouchController;
-import gr.auth.meng.isag.android.snakes.impl.SnakeBehaviour;
-import gr.auth.meng.isag.android.snakes.impl.SnakePainterImpl;
 import android.app.Activity;
 import android.graphics.Canvas;
 import android.os.Bundle;
@@ -14,28 +9,25 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 
-public class GameActivity extends Activity implements Callback, Runnable {
-	private SurfaceView surfaceView;
+public abstract class GameActivity<Board extends GameBoard> extends Activity implements
+		Callback, Runnable {
+	protected SurfaceView surfaceView;
 
-	private SurfaceHolder holder;
+	protected SurfaceHolder holder;
 
-	private SnakeBoard board;
+	protected Board board;
 
-	private GameComponent<SnakeBoard> components;
+	protected GameComponent<Board> components;
 
-	private boolean surface;
+	protected boolean surface;
 
-	private boolean running;
+	protected boolean running;
 
-	private Thread thread;
+	protected Thread thread;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
-		board = new BoardBuilder().outlineWalls().addFruit().build();
-		components = new MultiComponent<SnakeBoard>(new HalfTouchController(),
-				new SnakeBehaviour(), new SnakePainterImpl());
 
 		surfaceView = new SurfaceView(this);
 		holder = surfaceView.getHolder();
@@ -56,10 +48,10 @@ public class GameActivity extends Activity implements Callback, Runnable {
 		super.onResume();
 		this.running = true;
 		components.setup(board, surfaceView);
-		possiblyStartThread();
+		maybeStartThread();
 	}
 
-	private void possiblyStartThread() {
+	private void maybeStartThread() {
 		if (running == false || surface == false)
 			return;
 		if (thread == null) {
@@ -74,7 +66,7 @@ public class GameActivity extends Activity implements Callback, Runnable {
 		this.thread.interrupt();
 	}
 
-	private void paintBoard(SurfaceHolder holder) {
+	protected void paintBoard(SurfaceHolder holder) {
 		Canvas c = holder.lockCanvas();
 		try {
 			components.doDraw(c);
@@ -90,7 +82,7 @@ public class GameActivity extends Activity implements Callback, Runnable {
 
 	public void surfaceCreated(SurfaceHolder holder) {
 		this.surface = true;
-		possiblyStartThread();
+		maybeStartThread();
 	}
 
 	public void surfaceDestroyed(SurfaceHolder holder) {

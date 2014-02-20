@@ -21,7 +21,7 @@ public class TitleActivity extends Activity {
 	}
 
 	public void startGame(View w) {
-		Intent intent = new Intent(this, GameActivity.class);
+		Intent intent = new Intent(this, SnakeGameActivity.class);
 		startActivity(intent);
 	}
 }
